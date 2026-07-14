@@ -17,7 +17,7 @@ export default function Navbar() {
       }
 
       // Track active section on scroll
-      const sections = ['home', 'about', 'experience', 'skills', 'contact'];
+      const sections = ['home', 'about', 'experience', 'skills', 'playroom', 'contact'];
       const scrollPosition = window.scrollY + 200;
 
       for (const section of sections) {
@@ -41,6 +41,7 @@ export default function Navbar() {
     { name: 'About Me', href: '#about', id: 'about' },
     { name: 'Experience', href: '#experience', id: 'experience' },
     { name: 'Skills', href: '#skills', id: 'skills' },
+    { name: 'Playroom', href: '#playroom', id: 'playroom' },
     { name: 'Contact', href: '#contact', id: 'contact' },
   ];
 

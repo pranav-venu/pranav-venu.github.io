@@ -38,7 +38,7 @@ export default function Skills() {
     <section id="skills" className="skills-section">
       <div className="container">
         <div className="section-header">
-          <span className="section-number">04</span>
+          <span className="section-number">03</span>
           <h2 className="section-title">My Tech Stack</h2>
         </div>
 

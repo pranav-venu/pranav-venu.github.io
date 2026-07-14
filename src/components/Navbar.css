@@ -14,13 +14,9 @@
 
 .navbar-header.scrolled {
   height: 4.5rem;
-  background-color: rgba(251, 250, 247, 0.95);
+  background-color: rgba(10, 10, 10, 0.9);
   border-bottom: 1px solid var(--border-color);
   backdrop-filter: blur(10px);
-}
-
-[data-theme='dark'] .navbar-header.scrolled {
-  background-color: rgba(10, 10, 10, 0.95);
 }
 
 .navbar-container {
