@@ -74,9 +74,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .serif-font {
-  font-family: var(--font-serif);
-  font-weight: 400;
-  font-style: italic;
+  font-family: inherit;
+  font-style: normal;
+  font-weight: inherit;
 }
 
 /* Section Common Styles */
@@ -99,14 +99,7 @@ section {
 }
 
 .section-number {
-  font-family: var(--font-sans);
-  font-size: 0.85rem;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  color: var(--accent-gold);
-  text-transform: uppercase;
-  display: block;
-  margin-bottom: 0.5rem;
+  display: none;
 }
 
 .section-title {

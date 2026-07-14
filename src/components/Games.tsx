@@ -11,11 +11,8 @@ const INITIAL_SNAKE = [
 ];
 const INITIAL_DIRECTION = { x: 0, y: -1 }; // Up
 
-// Memory Match Constants
-const MEMORY_ITEMS = ['React', 'TS', 'CSS', 'Java', 'Git', 'Node', 'SQL', 'Figma'];
-
 export default function Games() {
-  const [activeTab, setActiveTab] = useState<'snake' | 'tictactoe' | 'hexmatch' | 'memory' | 'binary'>('snake');
+  const [activeTab, setActiveTab] = useState<'snake' | 'tictactoe' | 'hexmatch'>('snake');
 
   // --- 1. SNAKE STATE ---
   const [snake, setSnake] = useState(INITIAL_SNAKE);
@@ -282,7 +279,6 @@ export default function Games() {
     const gDiff = Math.abs(targetColor.g - userColor.g);
     const bDiff = Math.abs(targetColor.b - userColor.b);
     const totalDiff = rDiff + gDiff + bDiff;
-    // Max difference is 255 * 3 = 765
     const accuracy = Math.max(0, Math.round(100 - (totalDiff / 765) * 100));
     setHexAccuracy(accuracy);
   };
@@ -291,105 +287,6 @@ export default function Games() {
     setTargetColor(generateRandomColor());
     setUserColor({ r: 128, g: 128, b: 128 });
     setHexAccuracy(null);
-  };
-
-  // --- 4. MEMORY MATCH STATE & LOGIC ---
-  const generateShuffledCards = () => {
-    const cardsDeck = [...MEMORY_ITEMS, ...MEMORY_ITEMS]
-      .map((name, index) => ({ id: index, name, isFlipped: false, isMatched: false }))
-      .sort(() => Math.random() - 0.5);
-    return cardsDeck;
-  };
-
-  const [cards, setCards] = useState(generateShuffledCards);
-  const [selectedCards, setSelectedCards] = useState<number[]>([]);
-  const [memoryMoves, setMemoryMoves] = useState(0);
-  const [isMemoryFinished, setIsMemoryFinished] = useState(false);
-
-  const handleCardClick = (id: number) => {
-    if (selectedCards.length === 2 || cards[id].isMatched || cards[id].isFlipped) return;
-
-    // Flip card
-    const updatedCards = [...cards];
-    updatedCards[id].isFlipped = true;
-    setCards(updatedCards);
-
-    const newSelected = [...selectedCards, id];
-    setSelectedCards(newSelected);
-
-    if (newSelected.length === 2) {
-      setMemoryMoves(prev => prev + 1);
-      const [firstIdx, secondIdx] = newSelected;
-      if (cards[firstIdx].name === cards[secondIdx].name) {
-        // Match found
-        setTimeout(() => {
-          setCards(prevCards => {
-            const nextCards = prevCards.map((card, idx) => {
-              if (idx === firstIdx || idx === secondIdx) {
-                return { ...card, isMatched: true };
-              }
-              return card;
-            });
-            if (nextCards.every(c => c.isMatched)) {
-              setIsMemoryFinished(true);
-            }
-            return nextCards;
-          });
-          setSelectedCards([]);
-        }, 300);
-      } else {
-        // No match, flip back
-        setTimeout(() => {
-          setCards(prevCards => {
-            const nextCards = [...prevCards];
-            nextCards[firstIdx].isFlipped = false;
-            nextCards[secondIdx].isFlipped = false;
-            return nextCards;
-          });
-          setSelectedCards([]);
-        }, 1000);
-      }
-    }
-  };
-
-  const resetMemory = () => {
-    setCards(generateShuffledCards());
-    setSelectedCards([]);
-    setMemoryMoves(0);
-    setIsMemoryFinished(false);
-  };
-
-  // --- 5. BINARY SEARCH STATE & LOGIC ---
-  const [secretNumber, setSecretNumber] = useState(() => Math.floor(Math.random() * 100) + 1);
-  const [guess, setGuess] = useState(50);
-  const [binaryRange, setBinaryRange] = useState({ min: 1, max: 100 });
-  const [guessFeedback, setGuessFeedback] = useState<string>('Initiate search by guessing a number.');
-  const [guessCount, setGuessCount] = useState(0);
-  const [isBinarySolved, setIsBinarySolved] = useState(false);
-
-  const handleGuessSubmit = () => {
-    setGuessCount(prev => prev + 1);
-    if (guess === secretNumber) {
-      setGuessFeedback(`Success! Value ${secretNumber} located in ${guessCount + 1} steps.`);
-      setIsBinarySolved(true);
-    } else if (guess < secretNumber) {
-      const newMin = guess + 1;
-      setBinaryRange(prev => ({ ...prev, min: newMin }));
-      setGuessFeedback(`Too Low! Search range narrowed to [${newMin} — ${binaryRange.max}]`);
-    } else {
-      const newMax = guess - 1;
-      setBinaryRange(prev => ({ ...prev, max: newMax }));
-      setGuessFeedback(`Too High! Search range narrowed to [${binaryRange.min} — ${newMax}]`);
-    }
-  };
-
-  const resetBinary = () => {
-    setSecretNumber(Math.floor(Math.random() * 100) + 1);
-    setGuess(50);
-    setBinaryRange({ min: 1, max: 100 });
-    setGuessFeedback('Initiate search by guessing a number.');
-    setGuessCount(0);
-    setIsBinarySolved(false);
   };
 
   return (
@@ -403,43 +300,24 @@ export default function Games() {
         <div className="playroom-layout">
           {/* Games Selection Sidebar */}
           <div className="playroom-sidebar">
-            <h3 className="playroom-subtitle">
-              SDE <span className="serif-font">Arcade</span>
-            </h3>
-            <p className="playroom-desc">
-              Take a short break and challenge yourself with five minimalist, developer-themed games.
-            </p>
-
             <div className="tab-buttons">
               <button
                 className={`tab-btn ${activeTab === 'snake' ? 'active' : ''}`}
                 onClick={() => setActiveTab('snake')}
               >
-                01. Bug Hunter (Snake)
+                01. Bug Hunter
               </button>
               <button
                 className={`tab-btn ${activeTab === 'tictactoe' ? 'active' : ''}`}
                 onClick={() => setActiveTab('tictactoe')}
               >
-                02. Git Align (Tic-Tac-Toe)
+                02. Git Align
               </button>
               <button
                 className={`tab-btn ${activeTab === 'hexmatch' ? 'active' : ''}`}
                 onClick={() => setActiveTab('hexmatch')}
               >
                 03. CSS Color Match
-              </button>
-              <button
-                className={`tab-btn ${activeTab === 'memory' ? 'active' : ''}`}
-                onClick={() => setActiveTab('memory')}
-              >
-                04. Memory Leak (Cards)
-              </button>
-              <button
-                className={`tab-btn ${activeTab === 'binary' ? 'active' : ''}`}
-                onClick={() => setActiveTab('binary')}
-              >
-                05. Binary Search Game
               </button>
             </div>
           </div>
@@ -658,94 +536,6 @@ export default function Games() {
                     </button>
                   </div>
                 )}
-              </div>
-            )}
-
-            {/* 4. MEMORY LEAK (CARDS) */}
-            {activeTab === 'memory' && (
-              <div className="memory-game-container">
-                <div className="game-controls-header">
-                  <span className="game-status-pill">Memory Matches</span>
-                  <span className="score-pill">Moves: {memoryMoves}</span>
-                  <button className="game-action-btn" onClick={resetMemory}>
-                    <RotateCcw size={14} />
-                  </button>
-                </div>
-
-                <div className="memory-grid">
-                  {cards.map((card) => {
-                    const isOpen = card.isFlipped || card.isMatched;
-                    return (
-                      <button
-                        key={card.id}
-                        className={`memory-card ${card.isMatched ? 'matched' : ''} ${isOpen ? 'flipped' : ''}`}
-                        onClick={() => handleCardClick(card.id)}
-                      >
-                        <span className="card-face">
-                          {isOpen ? card.name : '?'}
-                        </span>
-                      </button>
-                    );
-                  })}
-
-                  {isMemoryFinished && (
-                    <div className="board-overlay animate-fade-in">
-                      <h3>Leak Resolved!</h3>
-                      <p>All garbage collection completed successfully in {memoryMoves} cycles.</p>
-                      <button className="restart-btn" onClick={resetMemory}>
-                        Re-allocate Stack
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* 5. BINARY SEARCH GAME */}
-            {activeTab === 'binary' && (
-              <div className="binary-game-container">
-                <div className="game-controls-header">
-                  <span className="game-status-pill">Optimal Binary Search</span>
-                  <span className="score-pill">Tries: {guessCount}</span>
-                  <button className="game-action-btn" onClick={resetBinary}>
-                    <RotateCcw size={14} />
-                  </button>
-                </div>
-
-                <div className="binary-board-content">
-                  <div className="binary-status-window">
-                    <p className="binary-range-log">
-                      Search Range: [<strong>{binaryRange.min}</strong> — <strong>{binaryRange.max}</strong>]
-                    </p>
-                    <p className="binary-feedback">{guessFeedback}</p>
-                  </div>
-
-                  {!isBinarySolved && (
-                    <div className="binary-input-controls">
-                      <div className="slider-group">
-                        <span className="slider-label">Current Guess: <strong>{guess}</strong></span>
-                        <input
-                          type="range"
-                          min={binaryRange.min}
-                          max={binaryRange.max}
-                          value={guess}
-                          onChange={(e) => setGuess(Number(e.target.value))}
-                        />
-                      </div>
-                      <button className="restart-btn full-width" onClick={handleGuessSubmit}>
-                        Execute Guess
-                      </button>
-                    </div>
-                  )}
-
-                  {isBinarySolved && (
-                    <div className="binary-solved-controls animate-fade-in">
-                      <button className="restart-btn" onClick={resetBinary}>
-                        Search Next Key
-                      </button>
-                    </div>
-                  )}
-                </div>
               </div>
             )}
           </div>

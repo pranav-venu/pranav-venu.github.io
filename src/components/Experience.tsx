@@ -52,7 +52,7 @@ export default function Experience() {
       role: 'Software Development Intern',
       company: 'Computervalley',
       location: 'India',
-      period: '9 Months (2021 — 2022)',
+      period: '2022 — 2023',
       type: 'work',
       description: [
         'Developed interactive and reusable frontend components using React.',
