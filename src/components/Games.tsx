@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, AlertTriangle, Cpu, User } from 'lucide-react';
+import { Play, Pause, RotateCcw, AlertTriangle } from 'lucide-react';
 import './Games.css';
 
 // Snake Constants
@@ -11,10 +11,13 @@ const INITIAL_SNAKE = [
 ];
 const INITIAL_DIRECTION = { x: 0, y: -1 }; // Up
 
-export default function Games() {
-  const [activeTab, setActiveTab] = useState<'snake' | 'tictactoe'>('snake');
+// Memory Match Constants
+const MEMORY_ITEMS = ['React', 'TS', 'CSS', 'Java', 'Git', 'Node', 'SQL', 'Figma'];
 
-  // --- SNAKE STATE ---
+export default function Games() {
+  const [activeTab, setActiveTab] = useState<'snake' | 'tictactoe' | 'hexmatch' | 'memory' | 'binary'>('snake');
+
+  // --- 1. SNAKE STATE ---
   const [snake, setSnake] = useState(INITIAL_SNAKE);
   const [bug, setBug] = useState({ x: 3, y: 3 });
   const [dir, setDir] = useState(INITIAL_DIRECTION);
@@ -24,17 +27,6 @@ export default function Games() {
   const [bugsResolved, setBugsResolved] = useState(0);
   const [snakeHighScore, setSnakeHighScore] = useState(() => {
     return Number(localStorage.getItem('snake_highscore') || '0');
-  });
-
-  // --- TIC-TAC-TOE STATE ---
-  const [board, setBoard] = useState<(string | null)[]>(Array(9).fill(null));
-  const [isXNext, setIsXNext] = useState(true);
-  const [gameMode, setGameMode] = useState<'ai' | 'pvp'>('ai');
-  const [tttWinner, setTttWinner] = useState<string | null>(null);
-  const [winningLine, setWinningLine] = useState<number[] | null>(null);
-  const [tttScores, setTttScores] = useState(() => {
-    const saved = localStorage.getItem('ttt_scores');
-    return saved ? JSON.parse(saved) : { player: 0, opponent: 0, ties: 0 };
   });
 
   const nextDirection = useRef(INITIAL_DIRECTION);
@@ -53,7 +45,7 @@ export default function Games() {
     }
   };
 
-  // --- SNAKE LOOP ---
+  // Snake Loop
   useEffect(() => {
     if (!isSnakeRunning || isSnakeGameOver || activeTab !== 'snake') return;
 
@@ -100,7 +92,6 @@ export default function Games() {
             return nextScore;
           });
           setBug(generateBug(newSnake));
-          // Speed up slightly
           setSnakeSpeed((speed) => Math.max(80, speed - 2));
         } else {
           newSnake.pop();
@@ -119,7 +110,7 @@ export default function Games() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (activeTab !== 'snake') return;
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
-        e.preventDefault(); // Prevent page scrolling
+        e.preventDefault();
       }
 
       if (e.key === ' ' && !isSnakeGameOver) {
@@ -181,11 +172,16 @@ export default function Games() {
     setIsSnakeRunning(false);
   };
 
-  // --- TIC-TAC-TOE LOGIC ---
+  // --- 2. TIC-TAC-TOE STATE & LOGIC ---
+  const [board, setBoard] = useState<(string | null)[]>(Array(9).fill(null));
+  const [isXNext, setIsXNext] = useState(true);
+  const [tttWinner, setTttWinner] = useState<string | null>(null);
+  const [winningLine, setWinningLine] = useState<number[] | null>(null);
+
   const winPatterns = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Cols
-    [0, 4, 8], [2, 4, 6]             // Diagonals
+    [0, 1, 2], [3, 4, 5], [6, 7, 8],
+    [0, 3, 6], [1, 4, 7], [2, 5, 8],
+    [0, 4, 8], [2, 4, 6]
   ];
 
   const checkWinner = (squares: (string | null)[]) => {
@@ -213,31 +209,14 @@ export default function Games() {
       if (winResult.pattern) {
         setWinningLine(winResult.pattern);
       }
-      updateTttScores(winResult.winner);
     } else {
       setIsXNext(player !== 'X');
     }
     return true;
   };
 
-  const updateTttScores = (winner: string) => {
-    setTttScores((prev: any) => {
-      let nextScores = { ...prev };
-      if (winner === 'X') {
-        nextScores.player += 1;
-      } else if (winner === 'O') {
-        nextScores.opponent += 1;
-      } else {
-        nextScores.ties += 1;
-      }
-      localStorage.setItem('ttt_scores', JSON.stringify(nextScores));
-      return nextScores;
-    });
-  };
-
-  // Mini-max AI for Tic-Tac-Toe
+  // AI Logic
   const findBestMove = (squares: (string | null)[]) => {
-    // 1. Try to win
     for (let i = 0; i < squares.length; i++) {
       if (!squares[i]) {
         const testBoard = [...squares];
@@ -245,7 +224,6 @@ export default function Games() {
         if (checkWinner(testBoard)?.winner === 'O') return i;
       }
     }
-    // 2. Block player
     for (let i = 0; i < squares.length; i++) {
       if (!squares[i]) {
         const testBoard = [...squares];
@@ -253,36 +231,32 @@ export default function Games() {
         if (checkWinner(testBoard)?.winner === 'X') return i;
       }
     }
-    // 3. Take center
     if (!squares[4]) return 4;
-    // 4. Take corners
     const corners = [0, 2, 6, 8];
     const availableCorners = corners.filter(c => !squares[c]);
     if (availableCorners.length > 0) {
       return availableCorners[Math.floor(Math.random() * availableCorners.length)];
     }
-    // 5. Take whatever is left
     const emptyIndices = squares.map((s, idx) => s === null ? idx : null).filter(idx => idx !== null) as number[];
     return emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
   };
 
-  // AI Move triggers after player moves
   useEffect(() => {
-    if (activeTab !== 'tictactoe' || gameMode !== 'ai' || isXNext || tttWinner) return;
+    if (activeTab !== 'tictactoe' || isXNext || tttWinner) return;
 
     const aiTimeout = setTimeout(() => {
       const bestMove = findBestMove(board);
       if (bestMove !== undefined && bestMove !== -1) {
         makeMove(bestMove, 'O');
       }
-    }, 500);
+    }, 400);
 
     return () => clearTimeout(aiTimeout);
-  }, [isXNext, board, tttWinner, gameMode, activeTab]);
+  }, [isXNext, board, tttWinner, activeTab]);
 
   const handleTttClick = (index: number) => {
-    if (!isXNext && gameMode === 'ai') return; // Wait for AI
-    makeMove(index, isXNext ? 'X' : 'O');
+    if (!isXNext) return;
+    makeMove(index, 'X');
   };
 
   const resetTtt = () => {
@@ -292,10 +266,130 @@ export default function Games() {
     setWinningLine(null);
   };
 
-  const resetTttScores = () => {
-    const defaultScores = { player: 0, opponent: 0, ties: 0 };
-    setTttScores(defaultScores);
-    localStorage.setItem('ttt_scores', JSON.stringify(defaultScores));
+  // --- 3. HEX MATCH STATE & LOGIC ---
+  const generateRandomColor = () => ({
+    r: Math.floor(Math.random() * 200) + 30,
+    g: Math.floor(Math.random() * 200) + 30,
+    b: Math.floor(Math.random() * 200) + 30,
+  });
+
+  const [targetColor, setTargetColor] = useState(generateRandomColor);
+  const [userColor, setUserColor] = useState({ r: 128, g: 128, b: 128 });
+  const [hexAccuracy, setHexAccuracy] = useState<number | null>(null);
+
+  const handleHexSubmit = () => {
+    const rDiff = Math.abs(targetColor.r - userColor.r);
+    const gDiff = Math.abs(targetColor.g - userColor.g);
+    const bDiff = Math.abs(targetColor.b - userColor.b);
+    const totalDiff = rDiff + gDiff + bDiff;
+    // Max difference is 255 * 3 = 765
+    const accuracy = Math.max(0, Math.round(100 - (totalDiff / 765) * 100));
+    setHexAccuracy(accuracy);
+  };
+
+  const resetHexMatch = () => {
+    setTargetColor(generateRandomColor());
+    setUserColor({ r: 128, g: 128, b: 128 });
+    setHexAccuracy(null);
+  };
+
+  // --- 4. MEMORY MATCH STATE & LOGIC ---
+  const generateShuffledCards = () => {
+    const cardsDeck = [...MEMORY_ITEMS, ...MEMORY_ITEMS]
+      .map((name, index) => ({ id: index, name, isFlipped: false, isMatched: false }))
+      .sort(() => Math.random() - 0.5);
+    return cardsDeck;
+  };
+
+  const [cards, setCards] = useState(generateShuffledCards);
+  const [selectedCards, setSelectedCards] = useState<number[]>([]);
+  const [memoryMoves, setMemoryMoves] = useState(0);
+  const [isMemoryFinished, setIsMemoryFinished] = useState(false);
+
+  const handleCardClick = (id: number) => {
+    if (selectedCards.length === 2 || cards[id].isMatched || cards[id].isFlipped) return;
+
+    // Flip card
+    const updatedCards = [...cards];
+    updatedCards[id].isFlipped = true;
+    setCards(updatedCards);
+
+    const newSelected = [...selectedCards, id];
+    setSelectedCards(newSelected);
+
+    if (newSelected.length === 2) {
+      setMemoryMoves(prev => prev + 1);
+      const [firstIdx, secondIdx] = newSelected;
+      if (cards[firstIdx].name === cards[secondIdx].name) {
+        // Match found
+        setTimeout(() => {
+          setCards(prevCards => {
+            const nextCards = prevCards.map((card, idx) => {
+              if (idx === firstIdx || idx === secondIdx) {
+                return { ...card, isMatched: true };
+              }
+              return card;
+            });
+            if (nextCards.every(c => c.isMatched)) {
+              setIsMemoryFinished(true);
+            }
+            return nextCards;
+          });
+          setSelectedCards([]);
+        }, 300);
+      } else {
+        // No match, flip back
+        setTimeout(() => {
+          setCards(prevCards => {
+            const nextCards = [...prevCards];
+            nextCards[firstIdx].isFlipped = false;
+            nextCards[secondIdx].isFlipped = false;
+            return nextCards;
+          });
+          setSelectedCards([]);
+        }, 1000);
+      }
+    }
+  };
+
+  const resetMemory = () => {
+    setCards(generateShuffledCards());
+    setSelectedCards([]);
+    setMemoryMoves(0);
+    setIsMemoryFinished(false);
+  };
+
+  // --- 5. BINARY SEARCH STATE & LOGIC ---
+  const [secretNumber, setSecretNumber] = useState(() => Math.floor(Math.random() * 100) + 1);
+  const [guess, setGuess] = useState(50);
+  const [binaryRange, setBinaryRange] = useState({ min: 1, max: 100 });
+  const [guessFeedback, setGuessFeedback] = useState<string>('Initiate search by guessing a number.');
+  const [guessCount, setGuessCount] = useState(0);
+  const [isBinarySolved, setIsBinarySolved] = useState(false);
+
+  const handleGuessSubmit = () => {
+    setGuessCount(prev => prev + 1);
+    if (guess === secretNumber) {
+      setGuessFeedback(`Success! Value ${secretNumber} located in ${guessCount + 1} steps.`);
+      setIsBinarySolved(true);
+    } else if (guess < secretNumber) {
+      const newMin = guess + 1;
+      setBinaryRange(prev => ({ ...prev, min: newMin }));
+      setGuessFeedback(`Too Low! Search range narrowed to [${newMin} — ${binaryRange.max}]`);
+    } else {
+      const newMax = guess - 1;
+      setBinaryRange(prev => ({ ...prev, max: newMax }));
+      setGuessFeedback(`Too High! Search range narrowed to [${binaryRange.min} — ${newMax}]`);
+    }
+  };
+
+  const resetBinary = () => {
+    setSecretNumber(Math.floor(Math.random() * 100) + 1);
+    setGuess(50);
+    setBinaryRange({ min: 1, max: 100 });
+    setGuessFeedback('Initiate search by guessing a number.');
+    setGuessCount(0);
+    setIsBinarySolved(false);
   };
 
   return (
@@ -307,13 +401,13 @@ export default function Games() {
         </div>
 
         <div className="playroom-layout">
-          {/* Controls & Tab selector */}
+          {/* Games Selection Sidebar */}
           <div className="playroom-sidebar">
             <h3 className="playroom-subtitle">
-              Need a <span className="serif-font">break</span>?
+              SDE <span className="serif-font">Arcade</span>
             </h3>
             <p className="playroom-desc">
-              Here are some quick retro-styled games inspired by software development. Resolve bugs, merge commits, and test your logic.
+              Take a short break and challenge yourself with five minimalist, developer-themed games.
             </p>
 
             <div className="tab-buttons">
@@ -321,78 +415,60 @@ export default function Games() {
                 className={`tab-btn ${activeTab === 'snake' ? 'active' : ''}`}
                 onClick={() => setActiveTab('snake')}
               >
-                Bug Hunter (Snake)
+                01. Bug Hunter (Snake)
               </button>
               <button
                 className={`tab-btn ${activeTab === 'tictactoe' ? 'active' : ''}`}
                 onClick={() => setActiveTab('tictactoe')}
               >
-                Git Align (Tic-Tac-Toe)
+                02. Git Align (Tic-Tac-Toe)
               </button>
-            </div>
-
-            {/* Scoreboard */}
-            <div className="scoreboard">
-              <h4 className="scoreboard-title">STATISTICS</h4>
-              {activeTab === 'snake' ? (
-                <div className="stat-grid">
-                  <div className="stat-box">
-                    <span className="stat-label">Bugs Resolved</span>
-                    <span className="stat-val text-gold">{bugsResolved}</span>
-                  </div>
-                  <div className="stat-box">
-                    <span className="stat-label">High Score</span>
-                    <span className="stat-val">{snakeHighScore}</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="stat-grid">
-                  <div className="stat-box">
-                    <span className="stat-label">Player (X)</span>
-                    <span className="stat-val text-gold">{tttScores.player}</span>
-                  </div>
-                  <div className="stat-box">
-                    <span className="stat-label">{gameMode === 'ai' ? 'AI (O)' : 'Opponent'}</span>
-                    <span className="stat-val">{tttScores.opponent}</span>
-                  </div>
-                  <div className="stat-box">
-                    <span className="stat-label">Ties</span>
-                    <span className="stat-val">{tttScores.ties}</span>
-                  </div>
-                </div>
-              )}
-              {activeTab === 'tictactoe' && (
-                <button className="clear-stats-btn" onClick={resetTttScores}>
-                  Reset Stats
-                </button>
-              )}
+              <button
+                className={`tab-btn ${activeTab === 'hexmatch' ? 'active' : ''}`}
+                onClick={() => setActiveTab('hexmatch')}
+              >
+                03. CSS Color Match
+              </button>
+              <button
+                className={`tab-btn ${activeTab === 'memory' ? 'active' : ''}`}
+                onClick={() => setActiveTab('memory')}
+              >
+                04. Memory Leak (Cards)
+              </button>
+              <button
+                className={`tab-btn ${activeTab === 'binary' ? 'active' : ''}`}
+                onClick={() => setActiveTab('binary')}
+              >
+                05. Binary Search Game
+              </button>
             </div>
           </div>
 
-          {/* Game Window Area */}
+          {/* Game Window Display Area */}
           <div className="game-screen-wrapper">
-            {activeTab === 'snake' ? (
+            
+            {/* 1. SNAKE GAME */}
+            {activeTab === 'snake' && (
               <div className="snake-game-container">
                 <div className="game-controls-header">
                   <span className="game-status-pill">
-                    {isSnakeGameOver ? 'SYSTEM CRASHED (Game Over)' : isSnakeRunning ? 'DEBUGGER RUNNING' : 'DEBUGGER IDLE'}
+                    {isSnakeGameOver ? 'Game Over' : isSnakeRunning ? 'Running' : 'Idle'}
                   </span>
+                  <span className="score-pill">Score: {bugsResolved} | High: {snakeHighScore}</span>
                   <div className="game-action-buttons">
                     <button
                       className="game-action-btn"
                       onClick={() => setIsSnakeRunning(!isSnakeRunning)}
                       disabled={isSnakeGameOver}
-                      title={isSnakeRunning ? 'Pause' : 'Start'}
                     >
-                      {isSnakeRunning ? <Pause size={16} /> : <Play size={16} />}
+                      {isSnakeRunning ? <Pause size={14} /> : <Play size={14} />}
                     </button>
-                    <button className="game-action-btn" onClick={resetSnake} title="Reset">
-                      <RotateCcw size={16} />
+                    <button className="game-action-btn" onClick={resetSnake}>
+                      <RotateCcw size={14} />
                     </button>
                   </div>
                 </div>
 
-                {/* Snake Grid Board */}
                 <div className="snake-board">
                   {Array.from({ length: GRID_SIZE }).map((_, y) => (
                     <div key={y} className="snake-row">
@@ -415,12 +491,11 @@ export default function Games() {
                     </div>
                   ))}
 
-                  {/* Overlays */}
                   {isSnakeGameOver && (
                     <div className="board-overlay animate-fade-in">
-                      <AlertTriangle className="error-icon" size={48} />
+                      <AlertTriangle className="error-icon" size={36} />
                       <h3>Runtime Error</h3>
-                      <p>Your compiler ran into a wall or collided with its own buffer!</p>
+                      <p>The compiler ran into a wall or collided with its own buffer.</p>
                       <button className="restart-btn" onClick={resetSnake}>
                         Recompile
                       </button>
@@ -429,8 +504,8 @@ export default function Games() {
 
                   {!isSnakeRunning && !isSnakeGameOver && (
                     <div className="board-overlay">
-                      <h3>Press Space or Start</h3>
-                      <p>Use arrow keys to steer the compiler and resolve bugs (red glowing cells).</p>
+                      <h3>Bug Hunter</h3>
+                      <p>Steer the compiler using Arrow Keys. Resolve red bugs to grow the codebase.</p>
                       <button className="restart-btn" onClick={() => setIsSnakeRunning(true)}>
                         Start Debugging
                       </button>
@@ -438,7 +513,6 @@ export default function Games() {
                   )}
                 </div>
 
-                {/* Mobile Steering Controls */}
                 <div className="mobile-dpad">
                   <div className="dpad-row">
                     <button className="dpad-btn up" onClick={() => handleSnakeButtonDir({ x: 0, y: -1 })}>▲</button>
@@ -453,36 +527,18 @@ export default function Games() {
                   </div>
                 </div>
               </div>
-            ) : (
+            )}
+
+            {/* 2. TIC TAC TOE */}
+            {activeTab === 'tictactoe' && (
               <div className="ttt-game-container">
                 <div className="game-controls-header">
-                  <div className="mode-selector">
-                    <button
-                      className={`mode-btn ${gameMode === 'ai' ? 'active' : ''}`}
-                      onClick={() => {
-                        setGameMode('ai');
-                        resetTtt();
-                      }}
-                    >
-                      <Cpu size={14} /> <span>VS Engine</span>
-                    </button>
-                    <button
-                      className={`mode-btn ${gameMode === 'pvp' ? 'active' : ''}`}
-                      onClick={() => {
-                        setGameMode('pvp');
-                        resetTtt();
-                      }}
-                    >
-                      <User size={14} /> <span>Local Dev</span>
-                    </button>
-                  </div>
-
-                  <button className="game-action-btn" onClick={resetTtt} title="Reset Match">
-                    <RotateCcw size={16} />
+                  <span className="game-status-pill">Commit Aligner</span>
+                  <button className="game-action-btn" onClick={resetTtt}>
+                    <RotateCcw size={14} />
                   </button>
                 </div>
 
-                {/* Tic Tac Toe Grid */}
                 <div className="ttt-board">
                   {board.map((value, idx) => {
                     const isWinningSquare = winningLine?.includes(idx);
@@ -491,7 +547,7 @@ export default function Games() {
                         key={idx}
                         className={`ttt-square ${isWinningSquare ? 'winning-square' : ''} ${value ? 'filled' : ''}`}
                         onClick={() => handleTttClick(idx)}
-                        disabled={value !== null || tttWinner !== null || (!isXNext && gameMode === 'ai')}
+                        disabled={value !== null || tttWinner !== null || !isXNext}
                       >
                         {value && (
                           <span className={`ttt-symbol ${value === 'X' ? 'symbol-x' : 'symbol-o'}`}>
@@ -502,34 +558,192 @@ export default function Games() {
                     );
                   })}
 
-                  {/* Winner Overlay */}
                   {tttWinner && (
                     <div className="board-overlay animate-fade-in">
                       <h3>
                         {tttWinner === 'Tie'
-                          ? 'Branches Merged (Tie)'
-                          : `${tttWinner === 'X' ? 'Player (X)' : gameMode === 'ai' ? 'Engine (O)' : 'Opponent (O)'} Wins!`}
+                          ? 'Branches Merged'
+                          : `${tttWinner === 'X' ? 'You Win' : 'Engine Wins'}`}
                       </h3>
                       <p>
                         {tttWinner === 'Tie'
-                          ? 'No conflicts found, clean git history.'
+                          ? 'No conflicts, clean git history.'
                           : 'Build aligned successfully.'}
                       </p>
                       <button className="restart-btn" onClick={resetTtt}>
-                        Deploy Next Commit
+                        Next Commit
                       </button>
                     </div>
                   )}
                 </div>
+              </div>
+            )}
 
-                <div className="ttt-turn-indicator">
-                  {!tttWinner && (
-                    <span>
-                      Active Branch:{' '}
-                      <strong className={isXNext ? 'text-gold' : 'text-primary'}>
-                        {isXNext ? 'Player (X)' : gameMode === 'ai' ? 'Thinking...' : 'Opponent (O)'}
-                      </strong>
-                    </span>
+            {/* 3. CSS COLOR MATCH */}
+            {activeTab === 'hexmatch' && (
+              <div className="hex-game-container">
+                <div className="game-controls-header">
+                  <span className="game-status-pill">Match Target Color</span>
+                  <button className="game-action-btn" onClick={resetHexMatch}>
+                    <RotateCcw size={14} />
+                  </button>
+                </div>
+
+                <div className="hex-colors-preview">
+                  <div className="color-preview-box">
+                    <div
+                      className="color-block"
+                      style={{ backgroundColor: `rgb(${targetColor.r}, ${targetColor.g}, ${targetColor.b})` }}
+                    />
+                    <span className="color-label">Target CSS</span>
+                  </div>
+                  <div className="color-preview-box">
+                    <div
+                      className="color-block"
+                      style={{ backgroundColor: `rgb(${userColor.r}, ${userColor.g}, ${userColor.b})` }}
+                    />
+                    <span className="color-label">Your Input</span>
+                  </div>
+                </div>
+
+                <div className="color-sliders">
+                  <div className="slider-group">
+                    <span className="slider-label text-red">R ({userColor.r})</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="255"
+                      value={userColor.r}
+                      onChange={(e) => setUserColor({ ...userColor, r: Number(e.target.value) })}
+                      disabled={hexAccuracy !== null}
+                    />
+                  </div>
+                  <div className="slider-group">
+                    <span className="slider-label text-green">G ({userColor.g})</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="255"
+                      value={userColor.g}
+                      onChange={(e) => setUserColor({ ...userColor, g: Number(e.target.value) })}
+                      disabled={hexAccuracy !== null}
+                    />
+                  </div>
+                  <div className="slider-group">
+                    <span className="slider-label text-blue">B ({userColor.b})</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="255"
+                      value={userColor.b}
+                      onChange={(e) => setUserColor({ ...userColor, b: Number(e.target.value) })}
+                      disabled={hexAccuracy !== null}
+                    />
+                  </div>
+                </div>
+
+                {hexAccuracy === null ? (
+                  <button className="restart-btn full-width" onClick={handleHexSubmit}>
+                    Compile & Match
+                  </button>
+                ) : (
+                  <div className="hex-results animate-fade-in">
+                    <h4>Accuracy: {hexAccuracy}%</h4>
+                    <p className="hex-code-match">
+                      Target: RGB({targetColor.r}, {targetColor.g}, {targetColor.b}) <br />
+                      Current: RGB({userColor.r}, {userColor.g}, {userColor.b})
+                    </p>
+                    <button className="restart-btn" onClick={resetHexMatch}>
+                      Next Color
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 4. MEMORY LEAK (CARDS) */}
+            {activeTab === 'memory' && (
+              <div className="memory-game-container">
+                <div className="game-controls-header">
+                  <span className="game-status-pill">Memory Matches</span>
+                  <span className="score-pill">Moves: {memoryMoves}</span>
+                  <button className="game-action-btn" onClick={resetMemory}>
+                    <RotateCcw size={14} />
+                  </button>
+                </div>
+
+                <div className="memory-grid">
+                  {cards.map((card) => {
+                    const isOpen = card.isFlipped || card.isMatched;
+                    return (
+                      <button
+                        key={card.id}
+                        className={`memory-card ${card.isMatched ? 'matched' : ''} ${isOpen ? 'flipped' : ''}`}
+                        onClick={() => handleCardClick(card.id)}
+                      >
+                        <span className="card-face">
+                          {isOpen ? card.name : '?'}
+                        </span>
+                      </button>
+                    );
+                  })}
+
+                  {isMemoryFinished && (
+                    <div className="board-overlay animate-fade-in">
+                      <h3>Leak Resolved!</h3>
+                      <p>All garbage collection completed successfully in {memoryMoves} cycles.</p>
+                      <button className="restart-btn" onClick={resetMemory}>
+                        Re-allocate Stack
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 5. BINARY SEARCH GAME */}
+            {activeTab === 'binary' && (
+              <div className="binary-game-container">
+                <div className="game-controls-header">
+                  <span className="game-status-pill">Optimal Binary Search</span>
+                  <span className="score-pill">Tries: {guessCount}</span>
+                  <button className="game-action-btn" onClick={resetBinary}>
+                    <RotateCcw size={14} />
+                  </button>
+                </div>
+
+                <div className="binary-board-content">
+                  <div className="binary-status-window">
+                    <p className="binary-range-log">
+                      Search Range: [<strong>{binaryRange.min}</strong> — <strong>{binaryRange.max}</strong>]
+                    </p>
+                    <p className="binary-feedback">{guessFeedback}</p>
+                  </div>
+
+                  {!isBinarySolved && (
+                    <div className="binary-input-controls">
+                      <div className="slider-group">
+                        <span className="slider-label">Current Guess: <strong>{guess}</strong></span>
+                        <input
+                          type="range"
+                          min={binaryRange.min}
+                          max={binaryRange.max}
+                          value={guess}
+                          onChange={(e) => setGuess(Number(e.target.value))}
+                        />
+                      </div>
+                      <button className="restart-btn full-width" onClick={handleGuessSubmit}>
+                        Execute Guess
+                      </button>
+                    </div>
+                  )}
+
+                  {isBinarySolved && (
+                    <div className="binary-solved-controls animate-fade-in">
+                      <button className="restart-btn" onClick={resetBinary}>
+                        Search Next Key
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>

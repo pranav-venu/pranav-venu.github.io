@@ -31,7 +31,7 @@ export default function Contact() {
             </h3>
             
             <p className="contact-intro">
-              Whether you have a project idea, want to collaborate on a full-stack system, or just want to chat about software engineering—my inbox is always open.
+              Whether you have a project idea, want to collaborate, or just want to chat, my inbox is always open.
             </p>
 
             <div className="info-details-centered">

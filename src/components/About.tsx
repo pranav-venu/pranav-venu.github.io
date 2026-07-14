@@ -20,15 +20,11 @@ export default function About() {
           {/* Right Column: Detailed narrative */}
           <div className="about-narrative">
             <p className="narrative-paragraph">
-              Hello! I am Pranav, a Software Development Engineer (SDE) with a passion for designing and building highly interactive, responsive, and robust web applications. With a solid academic foundation as a <strong>Master of Computer Applications (MCA)</strong> graduate, I bring a strong understanding of algorithms, database architectures, and software design principles.
+              Hello! I am Pranav, a Software Development Engineer (SDE) focused on designing and building interactive, responsive, and robust web applications.
             </p>
             
             <p className="narrative-paragraph">
-              Currently, I work as an SDE at <strong>KJSDC</strong>, where I've spent the past <strong>1.5 years</strong> collaborating with cross-functional teams to engineer performance-oriented systems. My daily work revolves around full-stack development—refactoring legacy systems, building modular user interfaces, designing clean RESTful APIs, and optimizing database queries.
-            </p>
-
-            <p className="narrative-paragraph">
-              When I'm not writing code, I keep myself updated with the latest trends in web technologies, explore design aesthetics, and experiment with frontend interactions to bridge the gap between form and function.
+              With an MCA degree and over 1.5 years of experience at KJSDC, I specialize in full-stack development. I build modular interfaces, design clean APIs, and optimize databases, bridging the gap between aesthetics and functionality.
             </p>
 
             {/* Core Values grid */}

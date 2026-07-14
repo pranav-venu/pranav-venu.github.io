@@ -46,6 +46,34 @@ export default function Experience() {
         'Focused on database systems design, software engineering methodologies, and network communications.'
       ],
       tags: ['Data Structures', 'Algorithms', 'DBMS', 'Software Engineering', 'Java', 'Web Tech']
+    },
+    {
+      id: 'computervalley',
+      role: 'Software Development Intern',
+      company: 'Computervalley',
+      location: 'India',
+      period: '9 Months (2021 — 2022)',
+      type: 'work',
+      description: [
+        'Developed interactive and reusable frontend components using React.',
+        'Collaborated on creating and refining wireframes and UI designs in Figma.',
+        'Contributed to daily stand-ups and agile workflows to deliver web interfaces.'
+      ],
+      tags: ['React', 'Figma', 'UI/UX Design', 'Frontend Development', 'JavaScript', 'HTML & CSS']
+    },
+    {
+      id: 'bca',
+      role: 'Bachelor of Computer Applications (BCA)',
+      company: 'Koshy Group of Management Studies',
+      location: 'India',
+      period: '2019 — 2022',
+      type: 'education',
+      description: [
+        'Studied foundational concepts of software engineering, database management systems, and programming languages.',
+        'Developed initial desktop and web projects as part of the academic curriculum.',
+        'Built a strong ground in logic, object-oriented programming, and computer networks.'
+      ],
+      tags: ['Programming Foundations', 'C++', 'Java', 'DBMS', 'Software Engineering', 'Computer Networks']
     }
   ];
 
